@@ -1,4 +1,4 @@
-import { fromEvent, map, mergeAll } from "rxjs";
+import { fromEvent, map, mergeAll, takeUntil } from "rxjs";
 import "./style.css";
 
 const canvas: HTMLCanvasElement = document.querySelector(".canvas")!;
@@ -7,6 +7,8 @@ const cursorPosition = { x: 0, y: 0 };
 //
 const canvasContext: CanvasRenderingContext2D = canvas.getContext("2d")!;
 canvasContext.lineWidth = 8;
+canvasContext.lineJoin = "round";
+canvasContext.lineCap = "round";
 canvasContext.strokeStyle = "white";
 
 const updateCursorPosition = (canvas: HTMLCanvasElement, event: MouseEvent) => {
@@ -25,9 +27,9 @@ const paintStroke = (event: MouseEvent) => {
   canvasContext.closePath();
 };
 
-const onMouseDown$ = fromEvent(canvas, "mousedown");
-const onMouseMove$ = fromEvent(canvas, "mousemove");
 const onMouseUp$ = fromEvent(canvas, "mouseup");
+const onMouseDown$ = fromEvent(canvas, "mousedown");
+const onMouseMove$ = fromEvent(canvas, "mousemove").pipe(takeUntil(onMouseUp$));
 
 onMouseDown$.subscribe((e) => updateCursorPosition(canvas, e as MouseEvent));
 
