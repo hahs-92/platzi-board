@@ -1,6 +1,9 @@
-import { fromEvent, map, mergeAll, takeUntil } from "rxjs";
+import { fromEvent, merge } from "rxjs";
+import { map, mergeAll, takeUntil } from "rxjs/operators";
 import "./style.css";
 
+const restartButton: HTMLInputElement =
+  document.querySelector(".restart-button")!;
 const canvas: HTMLCanvasElement = document.querySelector(".canvas")!;
 const cursorPosition = { x: 0, y: 0 };
 
@@ -27,15 +30,39 @@ const paintStroke = (event: MouseEvent) => {
   canvasContext.closePath();
 };
 
+//observables
+
 const onMouseUp$ = fromEvent(canvas, "mouseup");
 const onMouseDown$ = fromEvent(canvas, "mousedown");
 const onMouseMove$ = fromEvent(canvas, "mousemove").pipe(takeUntil(onMouseUp$));
 
-onMouseDown$.subscribe((e) => updateCursorPosition(canvas, e as MouseEvent));
+let mouseDownSubscription = onMouseDown$.subscribe((e) =>
+  updateCursorPosition(canvas, e as MouseEvent)
+);
 
 const startPaint$ = onMouseDown$.pipe(
   map(() => onMouseMove$),
   mergeAll()
 );
 
-startPaint$.subscribe((e) => paintStroke(e as MouseEvent));
+const onLoadWindow$ = fromEvent(window, "load");
+const onRestartClick$ = fromEvent(restartButton, "click");
+
+const restartWhiteBoard$ = merge(onLoadWindow$, onRestartClick$);
+
+//subscriptions
+let startPaintSubscription = startPaint$.subscribe((e) =>
+  paintStroke(e as MouseEvent)
+);
+
+restartWhiteBoard$.subscribe(() => {
+  canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+  startPaintSubscription.unsubscribe();
+  startPaintSubscription = startPaint$.subscribe((e) =>
+    paintStroke(e as MouseEvent)
+  );
+  mouseDownSubscription.unsubscribe();
+  mouseDownSubscription = onMouseDown$.subscribe((e) =>
+    updateCursorPosition(canvas, e as MouseEvent)
+  );
+});
