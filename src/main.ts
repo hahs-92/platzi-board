@@ -7,7 +7,7 @@ const restartButton: HTMLInputElement =
 const canvas: HTMLCanvasElement = document.querySelector(".canvas")!;
 const cursorPosition = { x: 0, y: 0 };
 
-//
+//canvas config
 const canvasContext: CanvasRenderingContext2D = canvas.getContext("2d")!;
 canvasContext.lineWidth = 8;
 canvasContext.lineJoin = "round";
@@ -48,6 +48,7 @@ const startPaint$ = onMouseDown$.pipe(
 const onLoadWindow$ = fromEvent(window, "load");
 const onRestartClick$ = fromEvent(restartButton, "click");
 
+//este merge no es un operador
 const restartWhiteBoard$ = merge(onLoadWindow$, onRestartClick$);
 
 //subscriptions
